@@ -1,14 +1,44 @@
-node{
-          
-          def remote = [:]
-          remote.name = 'test'
-          remote.host = '172.27.11.10'
-          //remote.password = 'hst123@@'
-          remote.user = 'root'
-          remote.allowAnyHosts = true
-          
-          stage('Testando Conexão SSH') {
-            sshCommand remote: remote, command: "ls -lrt"
-            sshCommand remote: remote, command: "whoami"
-          }
+properties([
+  parameters([
+    [$class: 'CascadeChoiceParameter', 
+      choiceType: 'PT_CHECKBOX', 
+      description: 'Select Environment',
+      filterLength: 1,
+      filterable: false,
+      name: 'Environment', 
+      script: [
+        $class: 'GroovyScript', 
+        script: [
+          classpath: [], 
+          sandbox: false, 
+          script: 
+            'return[\'Development\',\'QA\',\'Staging\',\'Production\']'
+        ]
+      ]
+    ]
+  ])
+])
+ 
+pipeline {
+  agent any
+  stages {
+    stage('Check env') {
+      steps {
+        script {
+          if ( env.Environment.isEmpty() ) {
+            echo "Environment not specified."
+            autoCancelled = true
+            error('Aborting the build.')
+          }
+          else {
+            echo "Environment total: ${env.Environment}"
+            String[] Env_Array = "${params.Environment}".split(',');
+            for (x in Env_Array) {
+              echo "ENV: ${x}"
+            }
+          }
+        }
+      }
+    }
+  }
 }
