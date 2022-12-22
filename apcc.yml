@@ -1,0 +1,70 @@
+---
+- hosts: webserver
+  become: true
+  vars:
+    doc_root: /var/www/example
+  tasks:
+    - name: Update apt
+      apt: update_cache=yes
+
+    - name: Install Apache
+      apt: name=apache2 state=latest
+
+    - name: Create custom document root
+      file: path={{ doc_root }} state=directory owner=www-data group=www-data
+
+    - name: Set up HTML file
+      copy: src=index.html dest={{ doc_root }}/index.html owner=www-data group=www-data mode=0644
+
+    - name: Set up Apache virtual host file
+      template: src=vhost.tpl dest=/etc/apache2/sites-available/000-default.conf
+      notify: restart apache
+  handlers:
+    - name: restart apache
+      service: name=apache2 state=restarted
+
+
+      curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo tee \ /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+
+      echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \ https://pkg.jenkins.io/debian-stable binary/ | sudo tee \ /etc/apt/sources.list.d/jenkins.list > /dev/null
+
+
+
+docker run \
+  --name jenkins-docker \
+  --rm \
+  --detach \
+  --privileged \
+  --network jenkins \
+  --network-alias docker \
+  --env DOCKER_TLS_CERTDIR=/certs \
+  --volume jenkins-docker-certs:/certs/client \
+  --volume jenkins-data:/var/jenkins_home \
+  --publish 2376:2376 \
+  sudo docker run \
+  sudo docker:dind \
+  --storage-driver overlay2
+
+
+  docker run \
+  --name jenkins-blueocean \
+  --restart=on-failure \
+  --detach \
+  --network jenkins \
+  --env DOCKER_HOST=tcp://docker:2376 \
+  --env DOCKER_CERT_PATH=/certs/client \
+  --env DOCKER_TLS_VERIFY=1 \
+  --publish 8080:8080 \
+  --publish 50000:50000 \
+  --volume jenkins-data:/var/jenkins_home \
+  --volume jenkins-docker-certs:/certs/client:ro \
+  myjenkins-blueocean:2.375.1-1 
+
+
+  sudo docker run --name jenkins-blueocean --restart=on-failure --detach \
+  --network jenkins --env DOCKER_HOST=tcp://docker:2376 \
+  --env DOCKER_CERT_PATH=/certs/client --env DOCKER_TLS_VERIFY=1 \
+  --publish 8080:8080 --publish 50000:50000 \
+  --volume jenkins-data:/var/jenkins_home \
+  --volume jenkins-docker-certs:/certs/client:ro \
+   jenkins/blueocean
