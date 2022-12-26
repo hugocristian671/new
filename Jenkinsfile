@@ -9,10 +9,12 @@ pipeline {
     stages {
         stage('BD') {
             steps {
-                switch(params.Platforms1){
-                    case "NT": echo "I'M NT"; break
-                    case "LINUX": echo "I'M LINUX"; break
-                    case "UNIX": echo "I'M UNIX"; break
+                script{
+                    switch(params.Platforms1){
+                        case "NT": echo "I'M NT"; break
+                        case "LINUX": echo "I'M LINUX"; break
+                        case "UNIX": echo "I'M UNIX"; break
+                    }
                 }
             }
         }
